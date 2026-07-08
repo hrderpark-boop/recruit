@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connectn & Company | 채용 지원 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase 라이브러리 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f6; }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8 border-b pb-4">입사 지원서</h1>
+        
+        <form id="applicationForm" class="space-y-8">
+            <div class="flex flex-col md:flex-row gap-8">
+                <!-- 왼쪽: 기본 정보 폼 -->
+                <div class="flex-grow space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700">이름</label>
+                            <input type="text" name="name" required class="w-full mt-1 p-3 border rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700">이메일</label>
+                            <input type="email" name="email" required class="w-full mt-1 p-3 border rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700">전화번호</label>
+                            <input type="tel" name="phone" required class="w-full mt-1 p-3 border rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700">희망연봉 (만원)</label>
+                            <input type="number" name="salary" class="w-full mt-1 p-3 border rounded-md">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700">지원 직무</label>
+                        <select name="job" class="w-full mt-1 p-3 border rounded-md">
+                            <option>HRD 컨설턴트</option>
+                            <option>HRD 영업 매니저</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 오른쪽: 사진 업로드 칸 -->
+                <div class="flex-shrink-0">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">증명사진</label>
+                    <div id="photoFrame" class="w-40 h-52 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 overflow-hidden" onclick="document.getElementById('photoInput').click()">
+                        <img id="photoPreview" class="w-full h-full object-cover hidden">
+                        <span id="photoPlaceholder" class="text-gray-400 text-xs text-center p-2">클릭하여 사진 등록</span>
+                    </div>
+                    <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="previewImage(this)">
+                </div>
+            </div>
+
+            <div class="space-y-6 pt-6 border-t">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">1. HRD분야에 지원하게 된 동기는 무엇인가요?</label>
+                    <textarea name="q1" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">2. HRD 영업은 어떤 일을 하는 것이라 생각하는 가요? 본인이 그 일을 잘 할 수 있다고 판단하는 강점이 무엇인가요?</label>
+                    <textarea name="q2" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">3. 결과의 성패유무와 관련없이 본인이 자신의 한계라 생각할 정도로 끝까지 노력했던 경험은 무엇인가요?</label>
+                    <textarea name="q3" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
+                </div>
+            </div>
+
+            <!-- 제출 버튼 -->
+            <div class="text-center pt-8">
+                <button type="submit" id="submitBtn" class="bg-indigo-600 text-white px-12 py-4 rounded-full font-bold text-lg hover:bg-indigo-700 transition shadow-lg w-full md:w-auto">제출하기</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Supabase 초기화 (본인의 설정값으로 변경해야 합니다)
+        const SUPABASE_URL = 'https://zjlqbwmzfuedyktbjpaf.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_yoM1ax2_waeizKZSaK6o6w_YEGgYf0M';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let selectedPhotoFile = null;
+
+        // 사진 미리보기 로직
+        function previewImage(input) {
+            const preview = document.getElementById('photoPreview');
+            const placeholder = document.getElementById('photoPlaceholder');
+            if (input.files && input.files[0]) {
+                selectedPhotoFile = input.files[0];
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                };
+                reader.readAsDataURL(selectedPhotoFile);
+            }
+        }
+
+        // 폼 제출 로직
+        document.getElementById('applicationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerText = "제출 중...";
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                const formData = new FormData(this);
+                const applicantData = Object.fromEntries(formData.entries());
+                
+                let photoUrl = '';
+
+                // 1. 사진이 첨부된 경우 Storage에 업로드
+                if (selectedPhotoFile) {
+                    const fileExt = selectedPhotoFile.name.split('.').pop();
+                    const fileName = `${Date.now()}_${applicantData.name}.${fileExt}`;
+                    
+                    const { data: uploadData, error: uploadError } = await supabaseClient
+                        .storage
+                        .from('photos')
+                        .upload(fileName, selectedPhotoFile);
+
+                    if (uploadError) throw uploadError;
+
+                    // 업로드된 이미지의 공개 URL 가져오기
+                    const { data: publicUrlData } = supabaseClient
+                        .storage
+                        .from('photos')
+                        .getPublicUrl(fileName);
+                        
+                    photoUrl = publicUrlData.publicUrl;
+                }
+
+                // 2. DB 테이블에 데이터 삽입
+                applicantData.photo_url = photoUrl;
+                
+                const { error: insertError } = await supabaseClient
+                    .from('applicants')
+                    .insert([applicantData]);
+
+                if (insertError) throw insertError;
+
+                alert("지원서 제출이 완료되었습니다. 감사합니다!");
+                this.reset();
+                document.getElementById('photoPreview').classList.add('hidden');
+                document.getElementById('photoPlaceholder').classList.remove('hidden');
+                selectedPhotoFile = null;
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert("제출 중 오류가 발생했습니다. 다시 시도해주세요.");
+            } finally {
+                submitBtn.innerText = "제출하기";
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+    </script>
+</body>
+</html>
