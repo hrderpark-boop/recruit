@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connectn & Company | 채용 지원 시스템</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase 라이브러리 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f6; }
@@ -18,36 +17,35 @@
         
         <form id="applicationForm" class="space-y-8">
             <div class="flex flex-col md:flex-row gap-8">
-                <!-- 왼쪽: 기본 정보 폼 -->
+                <!-- 기본 정보 -->
                 <div class="flex-grow space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">이름</label>
-                            <input type="text" name="name" required class="w-full mt-1 p-3 border rounded-md">
+                            <input type="text" id="inputName" required class="w-full mt-1 p-3 border rounded-md">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">이메일</label>
-                            <input type="email" name="email" required class="w-full mt-1 p-3 border rounded-md">
+                            <input type="email" id="inputEmail" required class="w-full mt-1 p-3 border rounded-md">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">전화번호</label>
-                            <input type="tel" name="phone" required class="w-full mt-1 p-3 border rounded-md">
+                            <input type="tel" id="inputPhone" required class="w-full mt-1 p-3 border rounded-md">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700">희망연봉 (만원)</label>
-                            <input type="number" name="salary" class="w-full mt-1 p-3 border rounded-md">
+                            <input type="number" id="inputSalary" class="w-full mt-1 p-3 border rounded-md">
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700">지원 직무</label>
-                        <select name="job" class="w-full mt-1 p-3 border rounded-md">
-                            <option>HRD 컨설턴트</option>
-                            <option>HRD 영업 매니저</option>
-                        </select>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700">지원 직무</label>
+                            <select id="inputJob" class="w-full mt-1 p-3 border rounded-md bg-gray-50 pointer-events-none">
+                                <option value="HRD 컨설턴트" selected>HRD 컨설턴트</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 오른쪽: 사진 업로드 칸 -->
+                <!-- 증명사진 -->
                 <div class="flex-shrink-0">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">증명사진</label>
                     <div id="photoFrame" class="w-40 h-52 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 overflow-hidden" onclick="document.getElementById('photoInput').click()">
@@ -58,22 +56,43 @@
                 </div>
             </div>
 
-            <div class="space-y-6 pt-6 border-t">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700">1. HRD분야에 지원하게 된 동기는 무엇인가요?</label>
-                    <textarea name="q1" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
+            <!-- 동적 학력 추가 섹션 -->
+            <div class="pt-6 border-t mt-4">
+                <div class="flex justify-between items-center mb-3">
+                    <label class="block text-lg font-bold text-gray-800">학력 사항</label>
+                    <button type="button" onclick="addEduRow()" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded text-sm font-bold hover:bg-indigo-200">+ 학력 추가</button>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700">2. HRD 영업은 어떤 일을 하는 것이라 생각하는 가요? 본인이 그 일을 잘 할 수 있다고 판단하는 강점이 무엇인가요?</label>
-                    <textarea name="q2" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700">3. 결과의 성패유무와 관련없이 본인이 자신의 한계라 생각할 정도로 끝까지 노력했던 경험은 무엇인가요?</label>
-                    <textarea name="q3" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
+                <div id="eduContainer" class="space-y-3">
+                    <!-- 학력 입력 칸이 여기에 들어갑니다 -->
                 </div>
             </div>
 
-            <!-- 제출 버튼 -->
+            <!-- 동적 경력 추가 섹션 -->
+            <div class="pt-6 border-t mt-4">
+                <div class="flex justify-between items-center mb-3">
+                    <label class="block text-lg font-bold text-gray-800">경력 사항 <span class="text-xs font-normal text-gray-500">(신입은 비워두세요)</span></label>
+                    <button type="button" onclick="addExpBlock()" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded text-sm font-bold hover:bg-indigo-200">+ 경력 추가</button>
+                </div>
+                <div id="expContainer" class="space-y-4">
+                    <!-- 경력 입력 칸이 여기에 들어갑니다 -->
+                </div>
+            </div>
+
+            <div class="space-y-6 pt-6 border-t">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">1. HRD분야에 지원하게 된 동기는 무엇인가요?</label>
+                    <textarea id="inputQ1" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">2. HRD 컨설턴트는 어떤 일을 하는 것이라 생각하는 가요? 본인이 그 일을 잘 할 수 있다고 판단하는 강점이 무엇인가요?</label>
+                    <textarea id="inputQ2" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">3. 결과의 성패유무와 관련없이 본인이 자신의 한계라 생각할 정도로 끝까지 노력했던 경험은 무엇인가요?</label>
+                    <textarea id="inputQ3" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
+                </div>
+            </div>
+
             <div class="text-center pt-8">
                 <button type="submit" id="submitBtn" class="bg-indigo-600 text-white px-12 py-4 rounded-full font-bold text-lg hover:bg-indigo-700 transition shadow-lg w-full md:w-auto">제출하기</button>
             </div>
@@ -81,14 +100,13 @@
     </div>
 
     <script>
-        // Supabase 초기화 (본인의 설정값으로 변경해야 합니다)
+        // ★ 본인의 수퍼베이스 주소와 키를 넣어주세요 ★
         const SUPABASE_URL = 'https://zjlqbwmzfuedyktbjpaf.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_yoM1ax2_waeizKZSaK6o6w_YEGgYf0M';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let selectedPhotoFile = null;
-
         // 사진 미리보기 로직
+        let selectedPhotoFile = null;
         function previewImage(input) {
             const preview = document.getElementById('photoPreview');
             const placeholder = document.getElementById('photoPlaceholder');
@@ -104,6 +122,56 @@
             }
         }
 
+        // 학력 칸 추가 로직
+        function addEduRow() {
+            const container = document.getElementById('eduContainer');
+            const row = document.createElement('div');
+            row.className = "edu-row grid grid-cols-2 md:grid-cols-6 gap-2 items-center bg-gray-50 p-2 rounded border border-gray-200";
+            row.innerHTML = `
+                <select class="edu-degree p-2 border rounded text-sm bg-white">
+                    <option value="학사">학사</option>
+                    <option value="석사">석사</option>
+                    <option value="박사">박사</option>
+                    <option value="전문학사">전문학사</option>
+                </select>
+                <input type="text" placeholder="학교명" class="edu-school p-2 border rounded text-sm md:col-span-2">
+                <input type="text" placeholder="전공명" class="edu-major p-2 border rounded text-sm">
+                <input type="text" placeholder="기간 (예: 18.03~22.02)" class="edu-period p-2 border rounded text-sm">
+                <div class="flex gap-2">
+                    <select class="edu-status p-2 border rounded text-sm bg-white flex-grow">
+                        <option value="졸업">졸업</option>
+                        <option value="졸업예정">졸업예정</option>
+                        <option value="수료">수료</option>
+                        <option value="중퇴">중퇴</option>
+                    </select>
+                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:bg-red-100 px-2 rounded font-bold">X</button>
+                </div>
+            `;
+            container.appendChild(row);
+        }
+
+        // 경력 칸 추가 로직
+        function addExpBlock() {
+            const container = document.getElementById('expContainer');
+            const block = document.createElement('div');
+            block.className = "exp-block bg-gray-50 p-4 rounded border border-gray-200 relative";
+            block.innerHTML = `
+                <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-3 text-red-500 hover:text-red-700 font-bold text-sm">삭제 X</button>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3 mt-4">
+                    <input type="text" placeholder="회사명" class="exp-company p-2 border rounded text-sm">
+                    <input type="text" placeholder="직급 (예: 대리)" class="exp-title p-2 border rounded text-sm">
+                    <input type="text" placeholder="담당업무 (예: 영업기획)" class="exp-role p-2 border rounded text-sm">
+                    <input type="text" placeholder="기간 (예: 21.03~24.01)" class="exp-period p-2 border rounded text-sm">
+                </div>
+                <textarea rows="3" placeholder="경력사항 상세 (진행한 프로젝트, 성과 등을 자유롭게 작성해주세요)" class="exp-details w-full p-3 border rounded-md text-sm"></textarea>
+            `;
+            container.appendChild(block);
+        }
+
+        // 초기 화면에 빈 칸 하나씩 띄워두기
+        addEduRow();
+        addExpBlock();
+
         // 폼 제출 로직
         document.getElementById('applicationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -111,49 +179,56 @@
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.innerText = "제출 중...";
             submitBtn.disabled = true;
-            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
             try {
-                const formData = new FormData(this);
-                const applicantData = Object.fromEntries(formData.entries());
-                
                 let photoUrl = '';
-
-                // 1. 사진이 첨부된 경우 Storage에 업로드
                 if (selectedPhotoFile) {
                     const fileExt = selectedPhotoFile.name.split('.').pop();
-                    const fileName = `${Date.now()}_${applicantData.name}.${fileExt}`;
-                    
-                    const { data: uploadData, error: uploadError } = await supabaseClient
-                        .storage
-                        .from('photos')
-                        .upload(fileName, selectedPhotoFile);
-
+                    const fileName = `${Date.now()}_${document.getElementById('inputName').value}.${fileExt}`;
+                    const { error: uploadError } = await supabaseClient.storage.from('photos').upload(fileName, selectedPhotoFile);
                     if (uploadError) throw uploadError;
-
-                    // 업로드된 이미지의 공개 URL 가져오기
-                    const { data: publicUrlData } = supabaseClient
-                        .storage
-                        .from('photos')
-                        .getPublicUrl(fileName);
-                        
+                    const { data: publicUrlData } = supabaseClient.storage.from('photos').getPublicUrl(fileName);
                     photoUrl = publicUrlData.publicUrl;
                 }
 
-                // 2. DB 테이블에 데이터 삽입
-                applicantData.photo_url = photoUrl;
-                
-                const { error: insertError } = await supabaseClient
-                    .from('applicants')
-                    .insert([applicantData]);
+                // 학력 데이터 하나로 합치기
+                let eduArr = [];
+                document.querySelectorAll('.edu-row').forEach(row => {
+                    const school = row.querySelector('.edu-school').value;
+                    if(school) {
+                        eduArr.push(`[${row.querySelector('.edu-degree').value}] ${school} (${row.querySelector('.edu-major').value}) | ${row.querySelector('.edu-period').value} | ${row.querySelector('.edu-status').value}`);
+                    }
+                });
 
+                // 경력 데이터 하나로 합치기
+                let expArr = [];
+                document.querySelectorAll('.exp-block').forEach(block => {
+                    const comp = block.querySelector('.exp-company').value;
+                    if(comp) {
+                        expArr.push(`■ ${comp} / ${block.querySelector('.exp-title').value} / ${block.querySelector('.exp-role').value} (${block.querySelector('.exp-period').value})\n- 상세: ${block.querySelector('.exp-details').value}`);
+                    }
+                });
+
+                // 최종 전송할 데이터
+                const finalData = {
+                    name: document.getElementById('inputName').value,
+                    email: document.getElementById('inputEmail').value,
+                    phone: document.getElementById('inputPhone').value,
+                    salary: document.getElementById('inputSalary').value,
+                    job: document.getElementById('inputJob').value,
+                    q1: document.getElementById('inputQ1').value,
+                    q2: document.getElementById('inputQ2').value,
+                    q3: document.getElementById('inputQ3').value,
+                    education_history: eduArr.length > 0 ? eduArr.join('\n') : '입력 안함',
+                    experience_history: expArr.length > 0 ? expArr.join('\n\n') : '신입 / 경력 없음',
+                    photo_url: photoUrl
+                };
+                
+                const { error: insertError } = await supabaseClient.from('applicants').insert([finalData]);
                 if (insertError) throw insertError;
 
                 alert("지원서 제출이 완료되었습니다. 감사합니다!");
-                this.reset();
-                document.getElementById('photoPreview').classList.add('hidden');
-                document.getElementById('photoPlaceholder').classList.remove('hidden');
-                selectedPhotoFile = null;
+                location.reload(); // 성공 시 페이지 새로고침
 
             } catch (error) {
                 console.error('Error:', error);
@@ -161,7 +236,6 @@
             } finally {
                 submitBtn.innerText = "제출하기";
                 submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         });
     </script>
