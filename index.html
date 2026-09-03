@@ -83,7 +83,7 @@
                     <textarea id="inputQ1" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700">2. HRD 컨설턴트는 어떤 일을 하는 것이라 생각하는 가요? 본인이 그 일을 잘 할 수 있다고 판단하는 강점이 무엇인가요?</label>
+                    <label class="block text-sm font-semibold text-gray-700">2. HRD컨설턴트(영업부문)는 어떤 일을 하는 것이라 생각하는 가요? 본인이 그 일을 잘 할 수 있다고 판단하는 강점이 무엇인가요?</label>
                     <textarea id="inputQ2" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
                 </div>
                 <div>
@@ -169,16 +169,23 @@
             submitBtn.innerText = "제출 중...";
             submitBtn.disabled = true;
 
+            let step = '사진 업로드';
             try {
                 let photoUrl = '';
                 if (selectedPhotoFile) {
-                    const fileExt = selectedPhotoFile.name.split('.').pop();
-                    const fileName = `${Date.now()}_${document.getElementById('inputName').value}.${fileExt}`;
-                    const { error: uploadError } = await supabaseClient.storage.from('photos').upload(fileName, selectedPhotoFile);
-                    if (uploadError) throw uploadError;
-                    const { data: publicUrlData } = supabaseClient.storage.from('photos').getPublicUrl(fileName);
-                    photoUrl = publicUrlData.publicUrl;
+                    // 파일명에 한글이 들어가면 Supabase Storage가 거부하므로 영문/숫자만 사용
+                    const ext = (selectedPhotoFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+                    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+                    const { error: uploadError } = await supabaseClient.storage.from('photos').upload(fileName, selectedPhotoFile, { contentType: selectedPhotoFile.type });
+                    if (uploadError) {
+                        // 사진이 실패해도 지원서 자체는 접수되도록 함
+                        console.error('사진 업로드 실패:', uploadError);
+                    } else {
+                        const { data: publicUrlData } = supabaseClient.storage.from('photos').getPublicUrl(fileName);
+                        photoUrl = publicUrlData.publicUrl;
+                    }
                 }
+                step = '지원서 저장';
 
                 let eduArr = [];
                 document.querySelectorAll('.edu-row').forEach(row => {
@@ -210,19 +217,29 @@
                 const { error: insertError } = await supabaseClient.from('applicants').insert([finalData]);
                 if (insertError) throw insertError;
 
-                // ★ 3. EmailJS로 메일 전송 (여기에 Service ID와 Template ID 입력) ★
-                await emailjs.send("service_suvree6", "template_5g01hpk", {
-                    name: finalData.name,
-                    email: finalData.email,
-                    phone: finalData.phone
-                });
+                // ★ 3. EmailJS로 관리자 알림 메일 전송 ★
+                // 저장은 이미 끝났으므로 메일이 실패해도 지원자에게는 오류를 띄우지 않음
+                try {
+                    await emailjs.send("service_suvree6", "template_5g01hpk", {
+                        name: finalData.name,
+                        email: finalData.email,
+                        phone: finalData.phone,
+                        job: finalData.job,
+                        salary: finalData.salary,
+                        education_history: finalData.education_history,
+                        experience_history: finalData.experience_history
+                    });
+                } catch (mailError) {
+                    console.error('알림 메일 전송 실패:', mailError);
+                }
 
                 alert("지원서 제출이 완료되었습니다. 감사합니다!");
                 location.reload(); 
 
             } catch (error) {
-                console.error('Error:', error);
-                alert("제출 중 오류가 발생했습니다. 다시 시도해주세요.");
+                console.error(`[${step}] 오류:`, error);
+                const detail = error && (error.message || error.text || JSON.stringify(error));
+                alert(`제출 중 오류가 발생했습니다 (${step}).\n\n${detail}\n\n이 메시지를 캡처해서 담당자에게 알려주세요.`);
             } finally {
                 submitBtn.innerText = "제출하기";
                 submitBtn.disabled = false;
