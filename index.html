@@ -3,122 +3,426 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connect & Company | 채용 지원 시스템</title>
+    <title>Connect & Company | 채용 지원</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 수퍼베이스 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- EmailJS 라이브러리 추가 -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f6; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, sans-serif;
+            background: #f0f0f0;
+            color: #111;
+            padding: 3rem 1rem 4rem;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* ── 레이아웃 ── */
+        .wrap {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        /* ── 헤더 ── */
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-bottom: 3px solid #111;
+            padding: 1.75rem 2rem 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .doc-header h1 {
+            font-size: 1.375rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: #111;
+        }
+        .doc-header .sub {
+            font-size: 0.7rem;
+            letter-spacing: 0.14em;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        /* ── 섹션 ── */
+        .section {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            padding: 1.75rem 2rem;
+            margin-bottom: 1.25rem;
+        }
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ebebeb;
+            padding-bottom: 0.625rem;
+            margin-bottom: 1.25rem;
+        }
+        .section-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: #111;
+        }
+
+        /* ── 레이블 · 인풋 ── */
+        .field { margin-bottom: 0; }
+        .field-label {
+            display: block;
+            font-size: 0.7rem;
+            color: #888;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.35rem;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            background: #fafafa;
+            border: 1px solid #d8d8d8;
+            border-radius: 0;
+            color: #111;
+            padding: 0.65rem 0.85rem;
+            font-family: inherit;
+            font-size: 0.875rem;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            transition: border-color 0.12s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #111;
+        }
+        input::placeholder, textarea::placeholder { color: #bbb; }
+        input[readonly] { background: #f7f7f7; color: #888; cursor: default; }
+        textarea { resize: vertical; min-height: 120px; }
+
+        /* ── 그리드 ── */
+        .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+        .span2 { grid-column: span 2; }
+        @media (max-width: 600px) {
+            .g2, .g3 { grid-template-columns: 1fr; }
+            .span2 { grid-column: span 1; }
+        }
+
+        /* ── 기본정보 + 사진 ── */
+        .info-photo {
+            display: flex;
+            gap: 2.5rem;
+            align-items: flex-start;
+        }
+        .info-fields { flex: 1; min-width: 0; }
+        .photo-col { flex-shrink: 0; }
+        .photo-frame {
+            width: 108px;
+            height: 144px;
+            border: 1px dashed #ccc;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            transition: border-color 0.12s;
+        }
+        .photo-frame:hover { border-color: #999; }
+        .photo-hint {
+            font-size: 0.65rem;
+            color: #aaa;
+            text-align: center;
+            line-height: 1.5;
+        }
+        @media (max-width: 600px) {
+            .info-photo { flex-direction: column; }
+            .photo-col { align-self: center; }
+        }
+
+        /* ── 주소 ── */
+        .addr-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem; }
+        @media (max-width: 600px) { .addr-row { grid-template-columns: 1fr; } }
+
+        /* ── 동적 행 ── */
+        .row-item {
+            display: grid;
+            gap: 0.5rem;
+            align-items: center;
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            padding: 0.6rem 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .edu-row  { grid-template-columns: 88px 1fr 1fr 108px 100px 24px; }
+        .cert-row { grid-template-columns: 1fr 1fr 96px 84px 24px; }
+        .lang-row { grid-template-columns: 120px 1fr 96px 116px 24px; }
+        @media (max-width: 600px) {
+            .edu-row, .cert-row, .lang-row { grid-template-columns: 1fr 1fr; }
+        }
+
+        .row-item input,
+        .row-item select { padding: 0.45rem 0.65rem; font-size: 0.8rem; }
+
+        .exp-block {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            padding: 1rem 1.25rem 0.875rem;
+            position: relative;
+            margin-bottom: 0.75rem;
+        }
+        .exp-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; margin-bottom: 0.5rem; }
+        .exp-block input, .exp-block select, .exp-block textarea {
+            padding: 0.45rem 0.65rem; font-size: 0.8rem;
+        }
+        @media (max-width: 600px) { .exp-grid { grid-template-columns: 1fr 1fr; } }
+
+        /* ── 버튼 ── */
+        .btn-add {
+            font-size: 0.68rem;
+            letter-spacing: 0.1em;
+            color: #888;
+            border: 1px solid #ccc;
+            background: transparent;
+            padding: 0.3rem 0.8rem;
+            cursor: pointer;
+            transition: color 0.12s, border-color 0.12s;
+        }
+        .btn-add:hover { color: #111; border-color: #999; }
+
+        .btn-del {
+            background: transparent;
+            border: none;
+            color: #111;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0;
+            line-height: 1;
+            transition: color 0.12s;
+        }
+        .btn-del:hover { color: #555; }
+
+        .btn-del-abs {
+            position: absolute;
+            top: 0.75rem;
+            right: 1rem;
+            background: transparent;
+            border: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #111;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 0.2rem;
+            transition: color 0.12s;
+        }
+        .btn-del-abs:hover { color: #555; }
+
+        /* ── 질문 ── */
+        .q-block { margin-bottom: 1.75rem; }
+        .q-block:last-child { margin-bottom: 0; }
+        .q-num {
+            font-size: 0.65rem;
+            letter-spacing: 0.18em;
+            color: #aaa;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+        .q-text {
+            font-size: 0.825rem;
+            color: #444;
+            margin-bottom: 0.6rem;
+            display: block;
+        }
+
+        /* ── 제출 ── */
+        .btn-submit {
+            width: 100%;
+            padding: 1rem;
+            background: #111;
+            color: #fff;
+            border: none;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-submit:hover { background: #333; }
+        .btn-submit:disabled { background: #ccc; color: #888; cursor: default; }
+
+        /* ── 하단 ── */
+        .doc-footer {
+            max-width: 860px;
+            margin: 2rem auto 0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.62rem;
+            letter-spacing: 0.08em;
+            color: #bbb;
+            text-transform: uppercase;
+        }
     </style>
 </head>
-<body class="p-4 md:p-10">
+<body>
+<div class="wrap">
 
-    <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-gray-200">
-        <h1 class="text-3xl font-bold text-gray-800 mb-8 border-b pb-4">입사 지원서</h1>
-        
-        <form id="applicationForm" class="space-y-8">
-            <div class="flex flex-col md:flex-row gap-8">
-                <!-- 기본 정보 -->
-                <div class="flex-grow space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">이름</label>
-                            <input type="text" id="inputName" required class="w-full mt-1 p-3 border rounded-md">
+    <header class="doc-header">
+        <h1>입사 지원서</h1>
+        <span class="sub">Connect &amp; Company</span>
+    </header>
+
+    <form id="applicationForm">
+
+        <!-- 기본 정보 -->
+        <div class="section">
+            <div class="section-head">
+                <span class="section-title">기본 정보</span>
+            </div>
+            <div class="info-photo">
+                <div class="info-fields">
+                    <div class="g2" style="gap:1rem 1.5rem;">
+                        <div class="field">
+                            <label class="field-label">이름</label>
+                            <input type="text" id="inputName" required placeholder="홍길동">
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">이메일</label>
-                            <input type="email" id="inputEmail" required class="w-full mt-1 p-3 border rounded-md">
+                        <div class="field">
+                            <label class="field-label">이메일</label>
+                            <input type="email" id="inputEmail" required placeholder="example@email.com">
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">전화번호</label>
-                            <input type="tel" id="inputPhone" required class="w-full mt-1 p-3 border rounded-md">
+                        <div class="field">
+                            <label class="field-label">전화번호</label>
+                            <input type="tel" id="inputPhone" required placeholder="010-0000-0000">
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">희망연봉 (만원)</label>
-                            <input type="number" id="inputSalary" class="w-full mt-1 p-3 border rounded-md">
+                        <div class="field">
+                            <label class="field-label">희망연봉 (만원)</label>
+                            <input type="number" id="inputSalary" placeholder="3500">
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">생년월일</label>
-                            <input type="date" id="inputBirth" required class="w-full mt-1 p-3 border rounded-md" onchange="updateAge()">
+                        <div class="field">
+                            <label class="field-label">생년월일</label>
+                            <input type="date" id="inputBirth" required onchange="updateAge()">
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700">만 나이</label>
-                            <input type="text" id="inputAge" readonly placeholder="생년월일 입력 시 자동 계산" class="w-full mt-1 p-3 border rounded-md bg-gray-50 text-gray-700">
+                        <div class="field">
+                            <label class="field-label">만 나이</label>
+                            <input type="text" id="inputAge" readonly placeholder="자동 계산">
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold text-gray-700">지원 직무</label>
-                            <select id="inputJob" class="w-full mt-1 p-3 border rounded-md bg-gray-50 pointer-events-none">
+                        <div class="field span2">
+                            <label class="field-label">지원 직무</label>
+                            <select id="inputJob" style="pointer-events:none; background:#f7f7f7; color:#888;">
                                 <option value="HRD 컨설턴트" selected>HRD 컨설턴트</option>
                             </select>
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold text-gray-700">주소(거주지)</label>
-                            <div class="grid grid-cols-2 gap-2 mt-1 mb-2">
-                                <select id="inputCity" required class="p-3 border rounded-md bg-white" onchange="updateDistrict()">
+                        <div class="field span2">
+                            <label class="field-label">주소(거주지)</label>
+                            <div class="addr-row">
+                                <select id="inputCity" required onchange="updateDistrict()">
                                     <option value="">시/도 선택</option>
                                 </select>
-                                <select id="inputDistrict" required class="p-3 border rounded-md bg-white">
+                                <select id="inputDistrict" required>
                                     <option value="">구/군 선택</option>
                                 </select>
                             </div>
-                            <input type="text" id="inputAddressDetail" class="w-full p-3 border rounded-md" placeholder="상세주소 (예: 테헤란로 123, 101동 502호)">
+                            <input type="text" id="inputAddressDetail" placeholder="상세주소 (예: 테헤란로 123, 101동 502호)">
                         </div>
                     </div>
                 </div>
-
-                <!-- 증명사진 -->
-                <div class="flex-shrink-0">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">증명사진</label>
-                    <div id="photoFrame" class="w-40 h-52 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 overflow-hidden" onclick="document.getElementById('photoInput').click()">
-                        <img id="photoPreview" class="w-full h-full object-cover hidden">
-                        <span id="photoPlaceholder" class="text-gray-400 text-xs text-center p-2">클릭하여 사진 등록</span>
+                <div class="photo-col">
+                    <label class="field-label" style="margin-bottom:0.45rem;">증명사진</label>
+                    <div class="photo-frame" id="photoFrame" onclick="document.getElementById('photoInput').click()">
+                        <img id="photoPreview" style="width:100%;height:100%;object-fit:cover;display:none;">
+                        <span class="photo-hint" id="photoPlaceholder">클릭하여<br>사진 등록</span>
                     </div>
-                    <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="previewImage(this)">
+                    <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="previewImage(this)">
                 </div>
             </div>
+        </div>
 
-            <!-- 동적 학력 추가 섹션 -->
-            <div class="pt-6 border-t mt-4">
-                <div class="flex justify-between items-center mb-3">
-                    <label class="block text-lg font-bold text-gray-800">학력 사항</label>
-                    <button type="button" onclick="addEduRow()" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded text-sm font-bold hover:bg-indigo-200">+ 학력 추가</button>
-                </div>
-                <div id="eduContainer" class="space-y-3"></div>
+        <!-- 학력 -->
+        <div class="section">
+            <div class="section-head">
+                <span class="section-title">학력 사항</span>
+                <button type="button" class="btn-add" onclick="addEduRow()">+ 학력 추가</button>
             </div>
+            <div id="eduContainer"></div>
+        </div>
 
-            <!-- 동적 경력 추가 섹션 -->
-            <div class="pt-6 border-t mt-4">
-                <div class="flex justify-between items-center mb-3">
-                    <label class="block text-lg font-bold text-gray-800">경력 사항 <span class="text-xs font-normal text-gray-500">(신입은 비워두세요)</span></label>
-                    <button type="button" onclick="addExpBlock()" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded text-sm font-bold hover:bg-indigo-200">+ 경력 추가</button>
-                </div>
-                <div id="expContainer" class="space-y-4"></div>
+        <!-- 경력 -->
+        <div class="section">
+            <div class="section-head">
+                <span class="section-title">경력 사항 <span style="font-weight:300;font-size:0.7rem;color:#bbb;letter-spacing:0;text-transform:none;">(신입은 비워두세요)</span></span>
+                <button type="button" class="btn-add" onclick="addExpBlock()">+ 경력 추가</button>
             </div>
+            <div id="expContainer"></div>
+        </div>
 
-            <div class="space-y-6 pt-6 border-t">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700">1. HRD분야에 지원하게 된 동기는 무엇인가요?</label>
-                    <textarea id="inputQ1" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700">2. HRD컨설턴트(영업부문)는 어떤 일을 하는 것이라 생각하는 가요? 본인이 그 일을 잘 할 수 있다고 판단하는 강점이 무엇인가요?</label>
-                    <textarea id="inputQ2" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700">3. 결과의 성패유무와 관련없이 본인이 자신의 한계라 생각할 정도로 끝까지 노력했던 경험은 무엇인가요?</label>
-                    <textarea id="inputQ3" rows="5" class="w-full mt-2 p-4 border rounded-md" required></textarea>
-                </div>
+        <!-- 자격사항 -->
+        <div class="section">
+            <div class="section-head">
+                <span class="section-title">자격사항</span>
+                <button type="button" class="btn-add" onclick="addCertRow()">+ 자격증 추가</button>
             </div>
+            <div id="certContainer"></div>
+        </div>
 
-            <div class="text-center pt-8">
-                <button type="submit" id="submitBtn" class="bg-indigo-600 text-white px-12 py-4 rounded-full font-bold text-lg hover:bg-indigo-700 transition shadow-lg w-full md:w-auto">제출하기</button>
+        <!-- 어학 -->
+        <div class="section">
+            <div class="section-head">
+                <span class="section-title">어학</span>
+                <button type="button" class="btn-add" onclick="addLangRow()">+ 어학 추가</button>
             </div>
-        </form>
+            <div id="langContainer"></div>
+        </div>
+
+        <!-- 자기소개 -->
+        <div class="section">
+            <div class="section-head">
+                <span class="section-title">자기소개</span>
+            </div>
+            <div class="q-block">
+                <span class="q-num">질문 01</span>
+                <span class="q-text">HRD분야에 지원하게 된 동기는 무엇인가요?</span>
+                <textarea id="inputQ1" rows="5" required></textarea>
+            </div>
+            <div class="q-block">
+                <span class="q-num">질문 02</span>
+                <span class="q-text">HRD컨설턴트(영업부문)는 어떤 일을 하는 것이라 생각하는가요? 본인이 그 일을 잘 할 수 있다고 판단하는 강점이 무엇인가요?</span>
+                <textarea id="inputQ2" rows="5" required></textarea>
+            </div>
+            <div class="q-block">
+                <span class="q-num">질문 03</span>
+                <span class="q-text">결과의 성패유무와 관련없이 본인이 자신의 한계라 생각할 정도로 끝까지 노력했던 경험은 무엇인가요?</span>
+                <textarea id="inputQ3" rows="5" required></textarea>
+            </div>
+        </div>
+
+        <div class="section" style="padding:1.5rem 2rem;">
+            <button type="submit" id="submitBtn" class="btn-submit">제출하기</button>
+        </div>
+
+    </form>
+
+    <div class="doc-footer">
+        <span>ⓒ Connect &amp; Company Co., Ltd.</span>
+        <span>www.connectn.co.kr</span>
     </div>
+</div>
 
-    <script>
+<script>
+
         // ★ 1. 수퍼베이스 키 입력 (기존과 동일) ★
         const SUPABASE_URL = 'https://zjlqbwmzfuedyktbjpaf.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_yoM1ax2_waeizKZSaK6o6w_YEGgYf0M';
@@ -222,7 +526,7 @@
                     <select class="edu-status p-2 border rounded text-sm bg-white flex-grow">
                         <option value="졸업">졸업</option><option value="졸업예정">졸업예정</option><option value="수료">수료</option><option value="중퇴">중퇴</option>
                     </select>
-                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:bg-red-100 px-2 rounded font-bold">X</button>
+                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="btn-del" style="padding:0 0.4rem;">✕</button>
                 </div>
             `;
             container.appendChild(row);
@@ -233,7 +537,7 @@
             const block = document.createElement('div');
             block.className = "exp-block bg-gray-50 p-4 rounded border border-gray-200 relative";
             block.innerHTML = `
-                <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-3 text-red-500 hover:text-red-700 font-bold text-sm">삭제 X</button>
+                <button type="button" onclick="this.parentElement.remove()" class="btn-del-abs">✕</button>
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-3 mt-4">
                     <input type="text" placeholder="회사명" class="exp-company p-2 border rounded text-sm">
                     <input type="text" placeholder="직급 (예: 대리)" class="exp-title p-2 border rounded text-sm">
@@ -246,8 +550,7 @@
             container.appendChild(block);
         }
 
-        addEduRow(); addExpBlock();
-
+    
         document.getElementById('applicationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
@@ -278,6 +581,18 @@
                     if(school) eduArr.push(`[${row.querySelector('.edu-degree').value}] ${school} (${row.querySelector('.edu-major').value}) | ${row.querySelector('.edu-period').value} | ${row.querySelector('.edu-status').value}`);
                 });
 
+                let certArr = [];
+                document.querySelectorAll('.cert-row').forEach(row => {
+                    const name = row.querySelector('.cert-name').value;
+                    if (name) certArr.push(`${name} | ${row.querySelector('.cert-issuer').value} | ${row.querySelector('.cert-date').value} | ${row.querySelector('.cert-status').value}`);
+                });
+
+                let langArr = [];
+                document.querySelectorAll('.lang-row').forEach(row => {
+                    const score = row.querySelector('.lang-score').value;
+                    if (score) langArr.push(`${row.querySelector('.lang-name').value} ${score} | ${row.querySelector('.lang-date').value} | ${row.querySelector('.lang-level').value}`);
+                });
+
                 let expArr = [];
                 document.querySelectorAll('.exp-block').forEach(block => {
                     const comp = block.querySelector('.exp-company').value;
@@ -300,6 +615,8 @@
                     q2: document.getElementById('inputQ2').value,
                     q3: document.getElementById('inputQ3').value,
                     education_history: eduArr.length > 0 ? eduArr.join('\n') : '입력 안함',
+                    cert_history: certArr.length > 0 ? certArr.join('\n') : '없음',
+                    lang_history: langArr.length > 0 ? langArr.join('\n') : '없음',
                     experience_history: expArr.length > 0 ? expArr.join('\n\n') : '신입 / 경력 없음',
                     photo_url: photoUrl
                 };
@@ -336,6 +653,99 @@
                 submitBtn.disabled = false;
             }
         });
-    </script>
+    
+</script>
+<script>
+    // 동적 행 함수 재정의
+
+    function addEduRow() {
+        const c = document.getElementById('eduContainer');
+        const r = document.createElement('div');
+        r.className = 'row-item edu-row';
+        r.innerHTML = `
+            <select class="edu-degree">
+                <option value="학사">학사</option><option value="석사">석사</option>
+                <option value="박사">박사</option><option value="전문학사">전문학사</option>
+            </select>
+            <input type="text" placeholder="학교명" class="edu-school">
+            <input type="text" placeholder="전공명" class="edu-major">
+            <input type="text" placeholder="기간 (18.03~22.02)" class="edu-period">
+            <select class="edu-status">
+                <option value="졸업">졸업</option><option value="졸업예정">졸업예정</option>
+                <option value="수료">수료</option><option value="중퇴">중퇴</option>
+            </select>
+            <button type="button" class="btn-del" onclick="this.parentElement.remove()">✕</button>
+        `;
+        c.appendChild(r);
+    }
+
+    function addExpBlock() {
+        const c = document.getElementById('expContainer');
+        const b = document.createElement('div');
+        b.className = 'exp-block';
+        b.innerHTML = `
+            <button type="button" class="btn-del-abs" onclick="this.parentElement.remove()">✕</button>
+            <div class="exp-grid" style="margin-top:0.25rem;">
+                <input type="text" placeholder="회사명" class="exp-company">
+                <input type="text" placeholder="직급 (예: 대리)" class="exp-title">
+                <input type="text" placeholder="담당업무" class="exp-role">
+                <input type="text" placeholder="기간 (21.03~24.01)" class="exp-period">
+                <input type="text" placeholder="연봉 (만원)" class="exp-salary">
+            </div>
+            <textarea rows="3" placeholder="경력사항 상세 (프로젝트, 성과 등)" class="exp-details" style="width:100%;margin-top:0.25rem;"></textarea>
+        `;
+        c.appendChild(b);
+    }
+
+    function addCertRow() {
+        const c = document.getElementById('certContainer');
+        const r = document.createElement('div');
+        r.className = 'row-item cert-row';
+        r.innerHTML = `
+            <input type="text" placeholder="자격증명 (예: 공인노무사)" class="cert-name">
+            <input type="text" placeholder="발급기관" class="cert-issuer">
+            <input type="text" placeholder="취득일 (23.06)" class="cert-date">
+            <select class="cert-status">
+                <option value="취득">취득</option>
+                <option value="준비중">준비중</option>
+            </select>
+            <button type="button" class="btn-del" onclick="this.parentElement.remove()">✕</button>
+        `;
+        c.appendChild(r);
+    }
+
+    function addLangRow() {
+        const c = document.getElementById('langContainer');
+        const r = document.createElement('div');
+        r.className = 'row-item lang-row';
+        r.innerHTML = `
+            <select class="lang-name">
+                <option value="TOEIC">TOEIC</option>
+                <option value="TOEIC Speaking">TOEIC Speaking</option>
+                <option value="TOEFL">TOEFL</option>
+                <option value="IELTS">IELTS</option>
+                <option value="OPIc">OPIc</option>
+                <option value="JLPT">JLPT</option>
+                <option value="HSK">HSK</option>
+                <option value="기타">기타</option>
+            </select>
+            <input type="text" placeholder="점수 / 등급 (예: 850, IH)" class="lang-score">
+            <input type="text" placeholder="취득일 (24.03)" class="lang-date">
+            <select class="lang-level">
+                <option value="">수준 선택</option>
+                <option value="원어민 수준">원어민 수준</option>
+                <option value="업무 가능">업무 가능</option>
+                <option value="일상 회화">일상 회화</option>
+                <option value="기초">기초</option>
+            </select>
+            <button type="button" class="btn-del" onclick="this.parentElement.remove()">✕</button>
+        `;
+        c.appendChild(r);
+    }
+
+    // cert·lang 수집 로직 (finalData 조립 직전에 실행)
+    const _origSubmit = document.getElementById('applicationForm').onsubmit;
+
+</script>
 </body>
 </html>
