@@ -164,7 +164,7 @@
             padding: 0.6rem 0.75rem;
             margin-bottom: 0.5rem;
         }
-        .edu-row  { grid-template-columns: 88px 1fr 1fr 108px 100px 24px; }
+        .edu-row  { grid-template-columns: 88px 1fr 1fr 80px 108px 100px 24px; }
         .cert-row { grid-template-columns: 1fr 1fr 96px 84px 24px; }
         .lang-row { grid-template-columns: 120px 1fr 96px 116px 24px; }
         @media (max-width: 600px) {
@@ -578,7 +578,7 @@
                 let eduArr = [];
                 document.querySelectorAll('.edu-row').forEach(row => {
                     const school = row.querySelector('.edu-school').value;
-                    if(school) eduArr.push(`[${row.querySelector('.edu-degree').value}] ${school} (${row.querySelector('.edu-major').value}) | ${row.querySelector('.edu-period').value} | ${row.querySelector('.edu-status').value}`);
+                    if(school) { const loc = row.querySelector('.edu-location') ? row.querySelector('.edu-location').value : ''; eduArr.push(`[${row.querySelector('.edu-degree').value}] ${school} (${row.querySelector('.edu-major').value})${loc ? ' / ' + loc : ''} | ${row.querySelector('.edu-period').value} | ${row.querySelector('.edu-status').value}`); }
                 });
 
                 let certArr = [];
@@ -669,6 +669,27 @@
             </select>
             <input type="text" placeholder="학교명" class="edu-school">
             <input type="text" placeholder="전공명" class="edu-major">
+            <select class="edu-location">
+                        <option value="">지역</option>
+                        <option value="서울">서울</option>
+                        <option value="경기">경기</option>
+                        <option value="인천">인천</option>
+                        <option value="강원">강원</option>
+                        <option value="대전">대전</option>
+                        <option value="세종">세종</option>
+                        <option value="충남">충남</option>
+                        <option value="충북">충북</option>
+                        <option value="광주">광주</option>
+                        <option value="전남">전남</option>
+                        <option value="전북">전북</option>
+                        <option value="부산">부산</option>
+                        <option value="대구">대구</option>
+                        <option value="울산">울산</option>
+                        <option value="경남">경남</option>
+                        <option value="경북">경북</option>
+                        <option value="제주">제주</option>
+                        <option value="해외">해외</option>
+                    </select>
             <input type="text" placeholder="기간 (18.03~22.02)" class="edu-period">
             <select class="edu-status">
                 <option value="졸업">졸업</option><option value="졸업예정">졸업예정</option>
