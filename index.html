@@ -553,6 +553,35 @@
     
         document.getElementById('applicationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+
+            // ── 제출 전 필수 항목 검증 ──
+            const name = document.getElementById('inputName').value.trim();
+            const email = document.getElementById('inputEmail').value.trim();
+            const phone = document.getElementById('inputPhone').value.trim();
+            const birth = document.getElementById('inputBirth').value;
+            const city = document.getElementById('inputCity').value;
+            const district = document.getElementById('inputDistrict').value;
+            const q1 = document.getElementById('inputQ1').value.trim();
+            const q2 = document.getElementById('inputQ2').value.trim();
+            const q3 = document.getElementById('inputQ3').value.trim();
+
+            if (!name) { alert('이름을 입력해주세요.'); document.getElementById('inputName').focus(); return; }
+            if (!email) { alert('이메일을 입력해주세요.'); document.getElementById('inputEmail').focus(); return; }
+            if (!phone) { alert('전화번호를 입력해주세요.'); document.getElementById('inputPhone').focus(); return; }
+            if (!birth) { alert('생년월일을 입력해주세요.'); document.getElementById('inputBirth').focus(); return; }
+            if (!city || !district) { alert('주소(거주지)의 시/도와 구/군을 선택해주세요.'); document.getElementById('inputCity').focus(); return; }
+            if (!selectedPhotoFile) { alert('증명사진을 등록해주세요.'); document.getElementById('photoFrame').scrollIntoView({behavior:'smooth', block:'center'}); return; }
+
+            // 학력 최소 1행 검증
+            const eduRows = document.querySelectorAll('.edu-row');
+            if (eduRows.length === 0 || !document.querySelector('.edu-school')?.value?.trim()) {
+                alert('학력 사항을 1개 이상 입력해주세요.'); return;
+            }
+
+            if (!q1) { alert('질문 01 답변을 입력해주세요.'); document.getElementById('inputQ1').focus(); return; }
+            if (!q2) { alert('질문 02 답변을 입력해주세요.'); document.getElementById('inputQ2').focus(); return; }
+            if (!q3) { alert('질문 03 답변을 입력해주세요.'); document.getElementById('inputQ3').focus(); return; }
+
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.innerText = "제출 중...";
             submitBtn.disabled = true;
@@ -566,8 +595,7 @@
                     const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
                     const { error: uploadError } = await supabaseClient.storage.from('photos').upload(fileName, selectedPhotoFile, { contentType: selectedPhotoFile.type });
                     if (uploadError) {
-                        // 사진이 실패해도 지원서 자체는 접수되도록 함
-                        console.error('사진 업로드 실패:', uploadError);
+                        throw new Error('사진 업로드에 실패했습니다: ' + (uploadError.message || JSON.stringify(uploadError)));
                     } else {
                         const { data: publicUrlData } = supabaseClient.storage.from('photos').getPublicUrl(fileName);
                         photoUrl = publicUrlData.publicUrl;
