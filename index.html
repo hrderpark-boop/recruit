@@ -104,6 +104,16 @@
         input:focus, select:focus, textarea:focus {
             border-color: #111;
         }
+
+        /* ── 셀렉트 드롭다운 화살표 ── */
+        select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23666' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            padding-right: 2rem;
+            cursor: pointer;
+        }
+        select:hover { border-color: #999; }
         input::placeholder, textarea::placeholder { color: #bbb; }
         input[readonly] { background: #f7f7f7; color: #888; cursor: default; }
         textarea { resize: vertical; min-height: 120px; }
@@ -165,15 +175,19 @@
             margin-bottom: 0.5rem;
         }
         .edu-row  { grid-template-columns: 88px 1fr 1fr 80px 108px 100px 24px; }
-        .cert-row { grid-template-columns: 1fr 1fr 96px 84px 24px; }
-        .lang-row { grid-template-columns: 120px 1fr 96px 116px 24px; }
-        .lang-row.has-custom { grid-template-columns: 110px 150px 1fr 96px 116px 24px; }
+        .cert-row { grid-template-columns: 1fr 1fr 118px 92px 24px; }
+        .lang-row { grid-template-columns: 124px 1fr 118px 116px 24px; }
+        .lang-row.has-custom { grid-template-columns: 110px 150px 1fr 118px 116px 24px; }
         @media (max-width: 600px) {
             .edu-row, .cert-row, .lang-row { grid-template-columns: 1fr 1fr; }
         }
 
-        .row-item input,
-        .row-item select { padding: 0.45rem 0.65rem; font-size: 0.8rem; }
+        .row-item input { padding: 0.45rem 0.65rem; font-size: 0.8rem; }
+        .row-item select {
+            padding: 0.45rem 1.5rem 0.45rem 0.6rem;
+            font-size: 0.8rem;
+            background-position: right 0.45rem center;
+        }
 
         .exp-block {
             background: #f5f5f5;
@@ -299,19 +313,25 @@
                     <div class="g2" style="gap:1rem 1.5rem;">
                         <div class="field">
                             <label class="field-label">이름</label>
-                            <input type="text" id="inputName" required placeholder="홍길동">
+                            <input type="text" id="inputName" required>
                         </div>
                         <div class="field">
                             <label class="field-label">이메일</label>
-                            <input type="email" id="inputEmail" required placeholder="example@email.com">
+                            <input type="email" id="inputEmail" required>
                         </div>
                         <div class="field">
                             <label class="field-label">전화번호</label>
                             <input type="tel" id="inputPhone" required placeholder="010-0000-0000">
                         </div>
                         <div class="field">
-                            <label class="field-label">희망연봉 (만원)</label>
-                            <input type="number" id="inputSalary" placeholder="3500">
+                            <label class="field-label">희망연봉</label>
+                            <div id="salaryWrap" style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem;">
+                                <select id="inputSalaryType" onchange="handleSalaryType()">
+                                    <option value="직접입력">직접 입력</option>
+                                    <option value="회사내규">회사 내규에 따름</option>
+                                </select>
+                                <input type="number" id="inputSalary" placeholder="만원">
+                            </div>
                         </div>
                         <div class="field">
                             <label class="field-label">생년월일</label>
@@ -337,7 +357,7 @@
                                     <option value="">구/군 선택</option>
                                 </select>
                             </div>
-                            <input type="text" id="inputAddressDetail" placeholder="상세주소 (예: 테헤란로 123, 101동 502호)">
+                            <input type="text" id="inputAddressDetail" placeholder="상세주소">
                         </div>
                     </div>
                 </div>
@@ -650,7 +670,9 @@
                         document.getElementById('inputDistrict').value,
                         document.getElementById('inputAddressDetail').value
                     ].filter(Boolean).join(' ') || '',
-                    salary: document.getElementById('inputSalary').value,
+                    salary: document.getElementById('inputSalaryType').value === '회사내규'
+                        ? '회사 내규에 따름'
+                        : document.getElementById('inputSalary').value,
                     job: document.getElementById('inputJob').value,
                     q1: document.getElementById('inputQ1').value,
                     q2: document.getElementById('inputQ2').value,
@@ -774,6 +796,20 @@
             <button type="button" class="btn-del" onclick="this.parentElement.remove()">✕</button>
         `;
         c.appendChild(r);
+    }
+
+    function handleSalaryType() {
+        const type = document.getElementById('inputSalaryType').value;
+        const wrap = document.getElementById('salaryWrap');
+        const input = document.getElementById('inputSalary');
+        if (type === '회사내규') {
+            input.style.display = 'none';
+            input.value = '';
+            wrap.style.gridTemplateColumns = '1fr';
+        } else {
+            input.style.display = 'block';
+            wrap.style.gridTemplateColumns = '1fr 1fr';
+        }
     }
 
     function addLangRow() {
