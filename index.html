@@ -167,6 +167,7 @@
         .edu-row  { grid-template-columns: 88px 1fr 1fr 80px 108px 100px 24px; }
         .cert-row { grid-template-columns: 1fr 1fr 96px 84px 24px; }
         .lang-row { grid-template-columns: 120px 1fr 96px 116px 24px; }
+        .lang-row.has-custom { grid-template-columns: 110px 150px 1fr 96px 116px 24px; }
         @media (max-width: 600px) {
             .edu-row, .cert-row, .lang-row { grid-template-columns: 1fr 1fr; }
         }
@@ -617,8 +618,20 @@
 
                 let langArr = [];
                 document.querySelectorAll('.lang-row').forEach(row => {
-                    const score = row.querySelector('.lang-score').value;
-                    if (score) langArr.push(`${row.querySelector('.lang-name').value} ${score} | ${row.querySelector('.lang-date').value} | ${row.querySelector('.lang-level').value}`);
+                    const langSel = row.querySelector('.lang-name');
+                    const customInput = row.querySelector('.lang-name-custom');
+                    const score = row.querySelector('.lang-score').value.trim();
+                    const date = row.querySelector('.lang-date').value.trim();
+                    const level = row.querySelector('.lang-level').value;
+                    if (score) {
+                        const langName = langSel.value === '기타'
+                            ? (customInput.value.trim() || '기타')
+                            : langSel.value;
+                        const parts = [langName, score];
+                        if (date) parts.push(date);
+                        if (level) parts.push(level);
+                        langArr.push(parts.join(' | '));
+                    }
                 });
 
                 let expArr = [];
@@ -768,7 +781,7 @@
         const r = document.createElement('div');
         r.className = 'row-item lang-row';
         r.innerHTML = `
-            <select class="lang-name">
+            <select class="lang-name" onchange="handleLangNameChange(this)">
                 <option value="TOEIC">TOEIC</option>
                 <option value="TOEIC Speaking">TOEIC Speaking</option>
                 <option value="TOEFL">TOEFL</option>
@@ -778,7 +791,8 @@
                 <option value="HSK">HSK</option>
                 <option value="기타">기타</option>
             </select>
-            <input type="text" placeholder="점수 / 등급 (예: 850, IH)" class="lang-score">
+            <input type="text" placeholder="어학명 (예: 스페인어)" class="lang-name-custom" style="display:none;">
+            <input type="text" placeholder="점수 (예: 850)" class="lang-score">
             <input type="text" placeholder="취득일 (24.03)" class="lang-date">
             <select class="lang-level">
                 <option value="">수준 선택</option>
@@ -790,6 +804,31 @@
             <button type="button" class="btn-del" onclick="this.parentElement.remove()">✕</button>
         `;
         c.appendChild(r);
+    }
+
+    function handleLangNameChange(sel) {
+        const row = sel.parentElement;
+        const customInput = row.querySelector('.lang-name-custom');
+        const scoreInput = row.querySelector('.lang-score');
+        const hints = {
+            'TOEIC':         '점수 (예: 850)',
+            'TOEIC Speaking':'등급 (예: IH, AL)',
+            'TOEFL':         '점수 (예: 105)',
+            'IELTS':         '점수 (예: 7.0)',
+            'OPIc':          '등급 (예: IH, AL)',
+            'JLPT':          '급수 (예: N1, N2)',
+            'HSK':           '급수 (예: 5급)',
+        };
+        if (sel.value === '기타') {
+            customInput.style.display = 'block';
+            row.classList.add('has-custom');
+            scoreInput.placeholder = '점수 / 등급';
+        } else {
+            customInput.style.display = 'none';
+            customInput.value = '';
+            row.classList.remove('has-custom');
+            scoreInput.placeholder = hints[sel.value] || '점수 / 등급';
+        }
     }
 
     // cert·lang 수집 로직 (finalData 조립 직전에 실행)
