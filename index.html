@@ -312,8 +312,15 @@
                 <div class="info-fields">
                     <div class="g2" style="gap:1rem 1.5rem;">
                         <div class="field">
-                            <label class="field-label">이름</label>
-                            <input type="text" id="inputName" required>
+                            <label class="field-label">이름 / 구분</label>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem;">
+                                <input type="text" id="inputName" required>
+                                <select id="inputCareerType" required>
+                                    <option value="">선택</option>
+                                    <option value="신입">신입</option>
+                                    <option value="경력">경력</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="field">
                             <label class="field-label">이메일</label>
@@ -587,6 +594,7 @@
             const q3 = document.getElementById('inputQ3').value.trim();
 
             if (!name) { alert('이름을 입력해주세요.'); document.getElementById('inputName').focus(); return; }
+            if (!document.getElementById('inputCareerType').value) { alert('신입/경력 구분을 선택해주세요.'); document.getElementById('inputCareerType').focus(); return; }
             if (!email) { alert('이메일을 입력해주세요.'); document.getElementById('inputEmail').focus(); return; }
             if (!phone) { alert('전화번호를 입력해주세요.'); document.getElementById('inputPhone').focus(); return; }
             if (!birth) { alert('생년월일을 입력해주세요.'); document.getElementById('inputBirth').focus(); return; }
@@ -662,6 +670,7 @@
 
                 const finalData = {
                     name: document.getElementById('inputName').value,
+                    career_type: document.getElementById('inputCareerType').value,
                     email: document.getElementById('inputEmail').value,
                     phone: document.getElementById('inputPhone').value,
                     birth_date: document.getElementById('inputBirth').value || null,
@@ -693,6 +702,7 @@
                 try {
                     await emailjs.send("service_suvree6", "template_5g01hpk", {
                         name: finalData.name,
+                        career_type: finalData.career_type,
                         email: finalData.email,
                         phone: finalData.phone,
                         job: finalData.job,
