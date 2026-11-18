@@ -34,7 +34,11 @@
                    class="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:border-gray-800">
             <label class="block text-xs text-gray-500 mb-1">비밀번호</label>
             <input id="loginPassword" type="password" autocomplete="current-password" required
-                   class="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:border-gray-800">
+                   class="w-full border border-gray-300 rounded px-3 py-2 mb-3 focus:outline-none focus:border-gray-800">
+            <label class="flex items-center gap-2 text-sm text-gray-600 mb-4 cursor-pointer select-none">
+                <input id="rememberEmail" type="checkbox" class="w-4 h-4 accent-gray-800 cursor-pointer">
+                아이디 저장
+            </label>
             <p id="loginError" class="hidden text-sm text-red-600 mb-3"></p>
             <button id="loginBtn" type="submit"
                     class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded transition">로그인</button>
@@ -212,8 +216,24 @@
                 return;
             }
             $('loginPassword').value = '';
+            // 아이디 저장: 이 컴퓨터의 브라우저에만 이메일을 기억 (비밀번호는 저장하지 않음)
+            try {
+                if ($('rememberEmail').checked) localStorage.setItem(REMEMBER_KEY, $('loginEmail').value.trim());
+                else localStorage.removeItem(REMEMBER_KEY);
+            } catch (_) {}
             enterIfAdmin(data.session);
         });
+
+        // 저장된 아이디가 있으면 채워두고 비밀번호 칸으로 커서 이동
+        const REMEMBER_KEY = 'cn_admin_saved_email';
+        try {
+            const saved = localStorage.getItem(REMEMBER_KEY);
+            if (saved) {
+                $('loginEmail').value = saved;
+                $('rememberEmail').checked = true;
+                setTimeout(() => $('loginPassword').focus(), 0);
+            }
+        } catch (_) {}
 
         $('logoutBtn').addEventListener('click', async () => {
             await supabaseClient.auth.signOut();
